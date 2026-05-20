@@ -30,6 +30,10 @@ export default function StudentDashboard() {
     queryFn: () => api.get('/sessions').then(r => r.data),
   })
 
+  const selectedOpportunities = opportunities.filter(
+    (o) => o.applicationStatus === 'SELECTED'
+  )
+
   const upcomingSessions = sessions.filter(s => s.status === 'UPCOMING').slice(0, 3)
   const recentOpportunities = opportunities.slice(0, 4)
 
@@ -43,6 +47,27 @@ export default function StudentDashboard() {
         </h1>
         <p className="text-white/40 text-sm mt-1">Here's what's happening on the network today.</p>
       </div>
+
+      {selectedOpportunities.length > 0 && (
+        <div className="mb-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl text-emerald-200">✓</div>
+            <div>
+              <p className="text-white font-semibold">
+                {selectedOpportunities.length === 1
+                  ? 'You have been selected!'
+                  : `You have ${selectedOpportunities.length} selected opportunities!`}
+              </p>
+              <p className="text-emerald-100 text-sm mt-1">
+                {selectedOpportunities.map((opp) => opp.title).join(', ')} {' '}
+                {selectedOpportunities.length === 1
+                  ? 'will contact you by email.'
+                  : 'will contact you by email.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

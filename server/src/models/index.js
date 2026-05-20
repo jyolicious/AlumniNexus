@@ -11,7 +11,8 @@ const opportunitySchema = new Schema({
   location:    String,
   domain:      String,   // 'Backend', 'ML', 'Finance'...
   deadline:    Date,
-  slots:       Number,
+  slots:       { type: Number, default: 1 },
+  selectedCount:{ type: Number, default: 0 },
   isActive:    { type: Boolean, default: true },
 }, { timestamps: true });
 

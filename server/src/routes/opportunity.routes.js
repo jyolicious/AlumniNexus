@@ -23,16 +23,45 @@ router.get('/', authenticate, async (req, res) => {
 
     const { type, domain } = req.query;
 
-    const filter = {
+    let filter = {
       isActive: true,
     };
 
-    if (type) {
-      filter.type = type;
-    }
+    if (req.user.role === 'STUDENT') {
+      const studentApplications = await Application.find({
+        applicant: req.user._id,
+      }).lean();
 
-    if (domain) {
-      filter.domain = domain;
+      const appliedOpportunityIds = studentApplications.map((app) => app.opportunity);
+
+      filter = {
+        $or: [
+          { isActive: true },
+          { _id: { $in: appliedOpportunityIds } },
+        ],
+      };
+
+      if (type) {
+        filter.$or = filter.$or.map((clause) => ({
+          ...clause,
+          type,
+        }));
+      }
+
+      if (domain) {
+        filter.$or = filter.$or.map((clause) => ({
+          ...clause,
+          domain,
+        }));
+      }
+    } else {
+      if (type) {
+        filter.type = type;
+      }
+
+      if (domain) {
+        filter.domain = domain;
+      }
     }
 
     const opps = await Opportunity.find(filter)
@@ -216,6 +245,11 @@ router.post(
       res.status(201).json(app);
 
     } catch (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({
+          error: 'Already applied',
+        });
+      }
 
       res.status(500).json({
         error: err.message,
@@ -424,7 +458,7 @@ router.patch(
 
       await app.save();
 
-      opp.selectedCount += 1;
+      opp.selectedCount = (opp.selectedCount || 0) + 1;
 
       // auto close
       if (opp.selectedCount >= opp.slots) {

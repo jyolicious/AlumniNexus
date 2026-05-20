@@ -21,6 +21,9 @@ export default function Opportunities() {
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ['opportunities', type],
     queryFn: () => api.get('/opportunities', { params: type !== 'ALL' ? { type } : {} }).then(r => r.data),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 15000,
   })
 
   const applyMutation = useMutation({
@@ -127,11 +130,15 @@ export default function Opportunities() {
                     </div>
                     <p className="text-white/30 text-xs mt-2 line-clamp-2">{o.description}</p>
                     <div className="mt-2">
+                      <div className="flex items-center gap-3 flex-wrap text-[10px] text-white/40">
+                        <span>Filled: {o.selectedCount || 0}/{o.slots}</span>
+                        <span>Remaining: {Math.max((o.slots || 0) - (o.selectedCount || 0), 0)}</span>
+                      </div>
                       {o.applicationStatus === 'SELECTED' && (
-                        <p className="text-emerald-300 text-xs">You are selected for this opportunity and will be contacted by email.</p>
+                        <p className="text-emerald-300 text-xs mt-2">You are selected for this opportunity and will be contacted by email.</p>
                       )}
                       {o.applicationStatus === 'PENDING' && (
-                        <p className="text-yellow-300 text-xs">Your application is submitted. Waiting for the employer's response.</p>
+                        <p className="text-yellow-300 text-xs mt-2">Your application is submitted. Waiting for the employer's response.</p>
                       )}
                     </div>
                     <div className="flex items-center justify-between mt-3">

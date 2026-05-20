@@ -25,6 +25,10 @@ export default function OpportunityApplicants({
         .then((r) => r.data),
   })
 
+  const selectedApplicants = applications.filter(
+    (app) => app.status === 'SELECTED'
+  )
+
   const selectMutation = useMutation({
     mutationFn: (applicationId) =>
       api.patch(
@@ -34,8 +38,9 @@ export default function OpportunityApplicants({
     onSuccess: () => {
       toast.success('Student selected successfully')
 
-      qc.invalidateQueries(['applications'])
+      qc.invalidateQueries(['applications', opportunity._id])
       qc.invalidateQueries(['my-opportunities'])
+      qc.invalidateQueries(['opportunities'])
     },
 
     onError: (err) => {
@@ -75,6 +80,20 @@ export default function OpportunityApplicants({
             ×
           </button>
         </div>
+
+        {selectedApplicants.length > 0 && (
+          <div className="mb-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+            {selectedApplicants.length === 1 ? (
+              <>
+                <strong>{selectedApplicants[0].applicant?.name}</strong> has been selected and will be contacted by email.
+              </>
+            ) : (
+              <>
+                {selectedApplicants.length} students have been selected and will be contacted by email.
+              </>
+            )}
+          </div>
+        )}
 
         {/* LOADING */}
         {isLoading ? (
@@ -139,6 +158,12 @@ export default function OpportunityApplicants({
                       {app.coverNote && (
                         <p className="text-white/30 text-sm mt-4 whitespace-pre-wrap">
                           {app.coverNote}
+                        </p>
+                      )}
+
+                      {app.status === 'SELECTED' && (
+                        <p className="text-emerald-200 text-xs mt-3">
+                          Selected student — will be contacted by email.
                         </p>
                       )}
                     </div>
