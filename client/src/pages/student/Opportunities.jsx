@@ -15,6 +15,7 @@ export default function Opportunities() {
   const [type, setType] = useState('ALL')
   const [applyingTo, setApplyingTo] = useState(null)
   const [resumeFile, setResumeFile] = useState(null)
+  const [coverNote, setCoverNote] = useState('')
   const qc = useQueryClient()
 
   const { data: opportunities = [], isLoading } = useQuery({
@@ -66,7 +67,7 @@ export default function Opportunities() {
             className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
               type === t ? 'bg-white text-black border-white' : 'border-white/10 text-white/40 hover:border-white/25 hover:text-white/60'
             }`}>
-            {t === 'ALL' ? 'All' : TYPE_CONFIG[t].label}
+            {t === 'ALL' ? 'All' : TYPE_CONFIG[t]?.label ?? 'All'}
           </button>
         ))}
       </div>
@@ -173,9 +174,9 @@ export default function Opportunities() {
                 </button>
                 <button
                   onClick={() => applyMutation.mutate(applyingTo._id)}
-                  disabled={applyMutation.isPending || !resumeFile}
+                  disabled={applyMutation.isLoading || !resumeFile}
                   className="flex-1 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50">
-                  {applyMutation.isPending ? 'Submitting...' : 'Submit'}
+                  {applyMutation.isLoading ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </div>

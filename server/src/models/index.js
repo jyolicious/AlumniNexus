@@ -19,7 +19,7 @@ const opportunitySchema = new Schema({
 const applicationSchema = new Schema({
   opportunity: { type: Schema.Types.ObjectId, ref: 'Opportunity', required: true },
   applicant:   { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  status:      { type: String, enum: ['PENDING','ACCEPTED','REJECTED'], default: 'PENDING' },
+  status:      { type: String, enum: ['PENDING','SELECTED','REJECTED'], default: 'PENDING' },
   coverNote:   String,
   resumeUrl:   String,
 }, { timestamps: true });
