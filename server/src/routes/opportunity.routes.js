@@ -37,7 +37,23 @@ router.get('/', authenticate, async (req, res) => {
 
     const opps = await Opportunity.find(filter)
       .populate('postedBy', 'name email avatarUrl')
-      .sort('-createdAt');
+      .sort('-createdAt')
+      .lean();
+
+    if (req.user.role === 'STUDENT') {
+      const applications = await Application.find({
+        opportunity: { $in: opps.map((opp) => opp._id) },
+        applicant: req.user._id,
+      }).lean();
+
+      const appByOpportunity = new Map(
+        applications.map((app) => [app.opportunity.toString(), app.status])
+      );
+
+      opps.forEach((opp) => {
+        opp.applicationStatus = appByOpportunity.get(opp._id.toString()) || null;
+      });
+    }
 
     res.json(opps);
 

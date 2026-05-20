@@ -107,6 +107,17 @@ export default function Opportunities() {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full bg-${cfg.color}-500/15 text-${cfg.color}-400`}>
                           {cfg.label}
                         </span>
+                        {o.applicationStatus && (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                            o.applicationStatus === 'SELECTED'
+                              ? 'bg-emerald-500/15 text-emerald-300'
+                              : o.applicationStatus === 'REJECTED'
+                              ? 'bg-red-500/15 text-red-300'
+                              : 'bg-yellow-500/15 text-yellow-300'
+                          }`}>
+                            {o.applicationStatus === 'SELECTED' ? 'Selected' : o.applicationStatus === 'REJECTED' ? 'Not selected' : 'Applied'}
+                          </span>
+                        )}
                         {o.deadline && (
                           <span className="text-[10px] text-white/25">
                             Due {new Date(o.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -115,13 +126,33 @@ export default function Opportunities() {
                       </div>
                     </div>
                     <p className="text-white/30 text-xs mt-2 line-clamp-2">{o.description}</p>
+                    <div className="mt-2">
+                      {o.applicationStatus === 'SELECTED' && (
+                        <p className="text-emerald-300 text-xs">You are selected for this opportunity and will be contacted by email.</p>
+                      )}
+                      {o.applicationStatus === 'PENDING' && (
+                        <p className="text-yellow-300 text-xs">Your application is submitted. Waiting for the employer's response.</p>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between mt-3">
                       <p className="text-white/20 text-xs">Posted by {o.postedBy?.name}</p>
                       <button
                         onClick={() => setApplyingTo(o)}
-                        className="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 active:scale-[0.98] transition-all"
-                      >
-                        Apply
+                        disabled={!!o.applicationStatus || !o.isActive}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          !!o.applicationStatus || !o.isActive
+                            ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                            : 'bg-white text-black hover:bg-white/90 active:scale-[0.98]'
+                        }`}>
+                        {o.applicationStatus
+                          ? o.applicationStatus === 'SELECTED'
+                            ? 'Selected'
+                            : o.applicationStatus === 'REJECTED'
+                            ? 'Not selected'
+                            : 'Applied'
+                          : o.isActive
+                          ? 'Apply'
+                          : 'Closed'}
                       </button>
                     </div>
                   </div>
