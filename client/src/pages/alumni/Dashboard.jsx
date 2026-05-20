@@ -139,10 +139,11 @@ export default function AlumniDashboard() {
       {/* Quick actions */}
       <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { to: '/alumni/profile',    icon: '◎', label: 'Update profile',   color: 'blue' },
-          { to: '/alumni/sessions',   icon: '▷', label: 'Host a session',   color: 'emerald' },
-          { to: '/alumni/mentorship', icon: '◇', label: 'View requests',    color: 'purple' },
-          { to: '/blogs/new',         icon: '≡', label: 'Write experience', color: 'amber' },
+          { to: '/alumni/profile',      icon: '◎', label: 'Update profile',   color: 'blue' },
+          { to: '/alumni/opportunities', icon: '◈', label: 'Post opportunity', color: 'emerald' },
+          { to: '/alumni/sessions',     icon: '▷', label: 'Host a session',   color: 'emerald' },
+          { to: '/alumni/mentorship',   icon: '◇', label: 'View requests',    color: 'purple' },
+          { to: '/blogs/new',           icon: '≡', label: 'Write experience', color: 'amber' },
         ].map(({ to, icon, label, color }) => (
           <Link key={to} to={to}
             className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/8 hover:border-white/15 hover:bg-white/3 transition-all group">

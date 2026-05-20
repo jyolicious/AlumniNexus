@@ -14,7 +14,7 @@ const TYPE_CONFIG = {
 export default function Opportunities() {
   const [type, setType] = useState('ALL')
   const [applyingTo, setApplyingTo] = useState(null)
-  const [coverNote, setCoverNote] = useState('')
+  const [resumeFile, setResumeFile] = useState(null)
   const qc = useQueryClient()
 
   const { data: opportunities = [], isLoading } = useQuery({
@@ -23,7 +23,26 @@ export default function Opportunities() {
   })
 
   const applyMutation = useMutation({
-    mutationFn: (id) => api.post(`/opportunities/${id}/apply`, { coverNote }),
+    mutationFn: async (id) => {
+
+  const formData = new FormData();
+
+  formData.append('coverNote', coverNote);
+
+  formData.append('resume', resumeFile);
+
+  const res = await api.post(
+    `/opportunities/${id}/apply`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  return res.data;
+},
     onSuccess: () => {
       toast.success('Application submitted!')
       setApplyingTo(null)
@@ -135,6 +154,18 @@ export default function Opportunities() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-white/25 transition-all resize-none"
                 />
               </div>
+              <div>
+              <label className="block text-xs font-medium text-white/50 mb-1.5 uppercase tracking-widest">
+                Resume (PDF Required)
+              </label>
+
+              <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setResumeFile(e.target.files[0])}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+              />
+              </div>
               <div className="flex gap-3">
                 <button onClick={() => setApplyingTo(null)}
                   className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/40 text-sm hover:border-white/20 transition-all">
@@ -142,7 +173,7 @@ export default function Opportunities() {
                 </button>
                 <button
                   onClick={() => applyMutation.mutate(applyingTo._id)}
-                  disabled={applyMutation.isPending}
+                  disabled={applyMutation.isPending || !resumeFile}
                   className="flex-1 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50">
                   {applyMutation.isPending ? 'Submitting...' : 'Submit'}
                 </button>

@@ -17,6 +17,7 @@ import MentorshipSent   from './pages/student/MentorshipSent'
 import AlumniDashboard    from './pages/alumni/Dashboard'
 import AlumniProfile      from './pages/alumni/Profile'
 import AlumniSessions     from './pages/alumni/Sessions'
+import AlumniOpportunities from './pages/alumni/Opportunities'
 import MentorshipReceived from './pages/alumni/MentorshipReceived'
 
 // ── Admin pages ─────────────────────────────────────────
@@ -143,7 +144,9 @@ export default function App() {
             <Route path="/blogs/new" element={
               <ProtectedRoute roles={['ALUMNI']}><BlogCreate /></ProtectedRoute>
             } />
-
+            <Route path="/alumni/opportunities" element={
+              <ProtectedRoute roles={['ALUMNI']}><AlumniOpportunities /></ProtectedRoute>
+            } />
             {/* 404 fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
 

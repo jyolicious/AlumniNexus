@@ -16,6 +16,7 @@ const NAV = {
   ALUMNI: [
     { path: '/alumni',             icon: '⊞', label: 'Dashboard' },
     { path: '/alumni/profile',     icon: '◎', label: 'My Profile' },
+    { path: '/alumni/opportunities', icon: '◈', label: 'Opportunities' },
     { path: '/alumni/mentorship',  icon: '◇', label: 'Mentorship' },
     { path: '/alumni/sessions',    icon: '▷', label: 'My Sessions' },
     { path: '/sessions',           icon: '◈', label: 'All Sessions' },
