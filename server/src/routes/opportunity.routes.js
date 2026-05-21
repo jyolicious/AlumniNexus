@@ -22,24 +22,39 @@ router.get('/', authenticate, async (req, res) => {
   try {
 
     const { type, domain } = req.query;
+    const currentRole = req.user.role;
 
     let filter = {
       isActive: true,
     };
 
-    if (req.user.role === 'STUDENT') {
-      const studentApplications = await Application.find({
+    if (currentRole === 'STUDENT' || currentRole === 'ALUMNI') {
+      const userApplications = await Application.find({
         applicant: req.user._id,
       }).lean();
 
-      const appliedOpportunityIds = studentApplications.map((app) => app.opportunity);
+      const appliedOpportunityIds = userApplications.map((app) => app.opportunity);
+
+      const roleClause = currentRole === 'STUDENT'
+        ? {
+            isActive: true,
+            $or: [
+              { eligibleRoles: { $exists: false } },
+              { eligibleRoles: 'STUDENT' },
+            ],
+          }
+        : {
+            isActive: true,
+            eligibleRoles: 'ALUMNI',
+          };
 
       filter = {
-        $or: [
-          { isActive: true },
-          { _id: { $in: appliedOpportunityIds } },
-        ],
+        $or: [roleClause],
       };
+
+      if (appliedOpportunityIds.length > 0) {
+        filter.$or.push({ _id: { $in: appliedOpportunityIds } });
+      }
 
       if (type) {
         filter.$or = filter.$or.map((clause) => ({
@@ -69,7 +84,7 @@ router.get('/', authenticate, async (req, res) => {
       .sort('-createdAt')
       .lean();
 
-    if (req.user.role === 'STUDENT') {
+    if (req.user.role === 'STUDENT' || req.user.role === 'ALUMNI') {
       const applications = await Application.find({
         opportunity: { $in: opps.map((opp) => opp._id) },
         applicant: req.user._id,
@@ -120,6 +135,8 @@ router.post(
         domain,
         deadline,
         slots,
+        eligibleRoles,
+        openToAlumni,
       } = req.body;
 
       if (!type || !title || !description) {
@@ -128,6 +145,29 @@ router.post(
           error: 'type, title, description required',
         });
 
+      }
+
+      const allowedRoles = ['STUDENT', 'ALUMNI'];
+      const normalizedRoles = Array.isArray(eligibleRoles)
+        ? [...new Set(eligibleRoles)]
+        : typeof eligibleRoles === 'string'
+        ? [eligibleRoles]
+        : ['STUDENT'];
+
+      const roles = normalizedRoles.length
+        ? normalizedRoles
+        : ['STUDENT'];
+
+      if (openToAlumni === true || openToAlumni === 'true') {
+        if (!roles.includes('ALUMNI')) {
+          roles.push('ALUMNI');
+        }
+      }
+
+      if (!roles.every((role) => allowedRoles.includes(role))) {
+        return res.status(400).json({
+          error: 'eligibleRoles must be STUDENT and/or ALUMNI',
+        });
       }
 
       const opp = await Opportunity.create({
@@ -142,6 +182,7 @@ router.post(
         domain,
 
         slots: slots || 1,
+        eligibleRoles: roles,
 
         deadline: deadline
           ? new Date(deadline)
@@ -176,7 +217,7 @@ router.post(
   '/:id/apply',
 
   authenticate,
-  authorize('STUDENT'),
+  authorize('STUDENT', 'ALUMNI'),
 
   async (req, res) => {
 
@@ -203,6 +244,23 @@ router.post(
           error: 'Opportunity not found or closed',
         });
 
+      }
+
+      const isEligible =
+        !opp.eligibleRoles || opp.eligibleRoles.length === 0
+          ? req.user.role === 'STUDENT'
+          : opp.eligibleRoles.includes(req.user.role);
+
+      if (!isEligible) {
+        return res.status(403).json({
+          error: 'You are not eligible to apply for this opportunity',
+        });
+      }
+
+      if (opp.postedBy.equals(req.user._id)) {
+        return res.status(400).json({
+          error: 'Cannot apply to your own opportunity',
+        });
       }
 
       // prevent overfilled positions
@@ -308,20 +366,15 @@ router.patch(
 
     try {
 
-      const opp = await Opportunity.findById(req.params.id);
+      const opp = await Opportunity.findOne({
+        _id: req.params.id,
+        postedBy: req.user._id,
+      });
 
       if (!opp) {
 
         return res.status(404).json({
-          error: 'Opportunity not found',
-        });
-
-      }
-
-      if (!opp.postedBy.equals(req.user._id)) {
-
-        return res.status(403).json({
-          error: 'Forbidden',
+          error: 'Opportunity not found or access denied',
         });
 
       }
@@ -358,20 +411,15 @@ router.get(
 
     try {
 
-      const opp = await Opportunity.findById(req.params.id);
+      const opp = await Opportunity.findOne({
+        _id: req.params.id,
+        postedBy: req.user._id,
+      });
 
       if (!opp) {
 
         return res.status(404).json({
-          error: 'Opportunity not found',
-        });
-
-      }
-
-      if (!opp.postedBy.equals(req.user._id)) {
-
-        return res.status(403).json({
-          error: 'Forbidden',
+          error: 'Opportunity not found or access denied',
         });
 
       }

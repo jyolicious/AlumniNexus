@@ -15,6 +15,7 @@ export default function CreateOpportunityModal({ onClose }) {
     domain: '',
     deadline: '',
     slots: 1,
+    openToAlumni: false,
   })
 
   const createMutation = useMutation({
@@ -34,9 +35,13 @@ export default function CreateOpportunityModal({ onClose }) {
   })
 
   const handleChange = (e) => {
+    const value = e.target.type === 'checkbox'
+      ? e.target.checked
+      : e.target.value
+
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     })
   }
 
@@ -55,7 +60,7 @@ export default function CreateOpportunityModal({ onClose }) {
             </h2>
 
             <p className="text-white/40 text-sm mt-1">
-              Create opportunities for students
+              Create opportunities for students and alumni applicants
             </p>
           </div>
 
@@ -205,6 +210,28 @@ export default function CreateOpportunityModal({ onClose }) {
               placeholder="Describe the role, skills required, responsibilities and expectations"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white resize-none"
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-xs uppercase tracking-widest text-white/50 mb-2">
+              Applicant type
+            </label>
+
+            <label className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer">
+              <input
+                type="checkbox"
+                name="openToAlumni"
+                checked={form.openToAlumni}
+                onChange={handleChange}
+                className="w-4 h-4 rounded border-white/20 text-emerald-500 bg-black"
+              />
+              <span className="text-white text-sm">
+                Open to alumni applicants as well as students
+              </span>
+            </label>
+            <p className="text-white/40 text-xs mt-1">
+              Leave unchecked for student-only opportunities.
+            </p>
           </div>
         </div>
 

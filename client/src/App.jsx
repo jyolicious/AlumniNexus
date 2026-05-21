@@ -18,6 +18,7 @@ import AlumniDashboard    from './pages/alumni/Dashboard'
 import AlumniProfile      from './pages/alumni/Profile'
 import AlumniSessions     from './pages/alumni/Sessions'
 import AlumniOpportunities from './pages/alumni/Opportunities'
+import BrowseOpportunities from './pages/alumni/BrowseOpportunities'
 import MentorshipReceived from './pages/alumni/MentorshipReceived'
 
 // ── Admin pages ─────────────────────────────────────────
@@ -146,6 +147,9 @@ export default function App() {
             } />
             <Route path="/alumni/opportunities" element={
               <ProtectedRoute roles={['ALUMNI']}><AlumniOpportunities /></ProtectedRoute>
+            } />
+            <Route path="/alumni/browse-opportunities" element={
+              <ProtectedRoute roles={['ALUMNI']}><BrowseOpportunities /></ProtectedRoute>
             } />
             {/* 404 fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

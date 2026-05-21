@@ -36,6 +36,12 @@ const opportunitySchema = new mongoose.Schema({
 
   deadline: Date,
 
+  eligibleRoles: {
+    type: [String],
+    enum: ['STUDENT', 'ALUMNI'],
+    default: ['STUDENT'],
+  },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Opportunity', opportunitySchema);

@@ -48,7 +48,7 @@ export default function Opportunities() {
             My Opportunities
           </h1>
           <p className="text-white/40 text-sm mt-1">
-            Manage jobs, internships, mentorships and events
+            Manage jobs, internships, mentorships and events for students and alumni
           </p>
         </div>
         <button
@@ -122,6 +122,10 @@ export default function Opportunities() {
                           Slots: {remainingSlots}/{opp.slots}
                         </span>
                         <span>Selected: {opp.selectedCount || 0}</span>
+                        <span>
+                          Applicants:{' '}
+                          {opp.eligibleRoles?.includes('ALUMNI') ? 'Students + Alumni' : 'Students only'}
+                        </span>
                         {opp.deadline && (
                           <span>
                             Deadline:{' '}

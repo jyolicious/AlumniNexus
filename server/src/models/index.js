@@ -14,6 +14,7 @@ const opportunitySchema = new Schema({
   slots:       { type: Number, default: 1 },
   selectedCount:{ type: Number, default: 0 },
   isActive:    { type: Boolean, default: true },
+  eligibleRoles: { type: [String], enum: ['STUDENT','ALUMNI'], default: ['STUDENT'] },
 }, { timestamps: true });
 
 // ── Application ─────────────────────────────────────────
