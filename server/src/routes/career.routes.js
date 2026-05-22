@@ -5,8 +5,8 @@ const { askCareerAssistant } = require('../services/career.service');
 // POST /api/career/query
 router.post('/query', authenticate, authorize('STUDENT'), async (req, res) => {
   try {
-    const { prompt } = req.body;
-    const answer = await askCareerAssistant({ prompt, student: req.user });
+    const { prompt, responseType } = req.body;
+    const answer = await askCareerAssistant({ prompt, responseType, student: req.user });
     res.json({ answer });
   } catch (err) {
     console.error('Career assistant error:', err);
