@@ -29,6 +29,7 @@ app.use('/api/blogs',         require('./routes/blog.routes'));
 app.use('/api/sessions',      require('./routes/session.routes'));
 app.use('/api/admin',         require('./routes/admin.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
+app.use('/api/career', require('./routes/career.routes'));
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

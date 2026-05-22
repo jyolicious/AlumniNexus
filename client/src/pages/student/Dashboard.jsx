@@ -144,6 +144,7 @@ export default function StudentDashboard() {
           { to: '/student/alumni', icon: '◎', label: 'Find a mentor', color: 'blue' },
           { to: '/student/opportunities', icon: '◈', label: 'Browse jobs', color: 'emerald' },
           { to: '/student/mentorship', icon: '◇', label: 'My requests', color: 'purple' },
+          { to: '/student/career-assistant', icon: '⚡', label: 'Career AI', color: 'sky' },
           { to: '/blogs', icon: '≡', label: 'Interview tips', color: 'amber' },
         ].map(({ to, icon, label, color }) => (
           <Link

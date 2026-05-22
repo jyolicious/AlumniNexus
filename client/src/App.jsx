@@ -32,6 +32,7 @@ import SessionList from './pages/shared/SessionList'
 import JoinSession from './pages/shared/JoinSession'
 import BlogList    from './pages/shared/BlogList'
 import BlogCreate  from './pages/shared/BlogCreate'
+import CareerAssistant from './pages/student/CareerAssistant'
 
 // ────────────────────────────────────────────────────────
 const queryClient = new QueryClient({
@@ -102,6 +103,9 @@ export default function App() {
             } />
             <Route path="/student/mentorship" element={
               <ProtectedRoute roles={['STUDENT']}><MentorshipSent /></ProtectedRoute>
+            } />
+            <Route path="/student/career-assistant" element={
+              <ProtectedRoute roles={['STUDENT']}><CareerAssistant /></ProtectedRoute>
             } />
 
             {/* Alumni */}

@@ -10,6 +10,7 @@ const NAV = {
     { path: '/student/alumni',        icon: '◎', label: 'Find Alumni' },
     { path: '/student/opportunities', icon: '◈', label: 'Opportunities' },
     { path: '/student/mentorship',    icon: '◇', label: 'Mentorship' },
+    { path: '/student/career-assistant', icon: '⚡', label: 'Career AI' },
     { path: '/sessions',              icon: '▷', label: 'Live Sessions' },
     { path: '/blogs',                 icon: '≡', label: 'Interview Blogs' },
   ],
