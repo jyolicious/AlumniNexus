@@ -15,6 +15,7 @@ export default function JoinSession() {
   const [joined, setJoined] = useState(null)
   const [roomError, setRoomError] = useState(null)
   const [connecting, setConnecting] = useState(false)
+  const [permissionError, setPermissionError] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -22,18 +23,45 @@ export default function JoinSession() {
     if (code) setJoinCode(code.toUpperCase())
   }, [location.search])
 
+  const checkMediaPermissions = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return true
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      stream.getTracks().forEach(track => track.stop())
+      return true
+    } catch (err) {
+      const message = err?.name === 'NotAllowedError' || err?.name === 'PermissionDismissedError'
+        ? 'Camera and microphone permissions were denied. Please allow access and retry.'
+        : err?.name === 'NotFoundError'
+          ? 'No camera or microphone found. Please connect a device and retry.'
+          : 'Unable to access camera or microphone. Please allow access and retry.'
+      setRoomError(message)
+      setPermissionError(true)
+      throw err
+    }
+  }
+
   const handleJoin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setRoomError(null)
+    setPermissionError(false)
     try {
+      await checkMediaPermissions()
       const { data } = await api.post('/sessions/join', { joinCode, joinPassword: password })
       setJoined(data)
       setConnecting(true)
       toast.success('Joining...')
     } catch (err) {
-      setRoomError(err.response?.data?.error || 'Failed to join session')
-      toast.error(err.response?.data?.error || 'Failed to join')
+      const apiError = err?.response?.data?.error
+      if (apiError) {
+        setRoomError(apiError)
+        toast.error(apiError)
+      } else if (!permissionError) {
+        setRoomError('Failed to join session')
+        toast.error('Failed to join')
+      }
     } finally {
       setLoading(false)
     }
@@ -51,20 +79,18 @@ export default function JoinSession() {
           options={{
             adaptiveStream: true,
             dynacast: true,
-            publishDefaults: {
-              audioPreset: 'music',
-              videoSimulcastLayers: [
-                { quality: 'low', maxBitrate: 150_000, maxFramerate: 15 },
-                { quality: 'medium', maxBitrate: 500_000, maxFramerate: 30 },
-                { quality: 'high', maxBitrate: 2_500_000, maxFramerate: 60 },
-              ],
-            },
           }}
           className="w-full h-full"
           data-lk-theme="default"
           onError={(error) => {
             console.error('LiveKit error:', error)
-            setRoomError(error.message || 'Connection error')
+            const permissionDenied = error?.name === 'NotAllowedError' || error?.name === 'PermissionDismissedError'
+            if (permissionDenied) {
+              setRoomError('Camera and microphone permissions were denied. Please allow access and retry.')
+              setPermissionError(true)
+            } else {
+              setRoomError(error.message || 'Connection error')
+            }
             toast.error('Connection error: ' + (error.message || 'Unknown error'))
           }}
           onConnected={() => {
@@ -140,6 +166,13 @@ export default function JoinSession() {
             <li>✓ Test speakers/headphones volume</li>
             <li>✓ Check internet connection is stable</li>
           </ul>
+          {permissionError && (
+            <div className="mt-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-200">
+              <p className="font-semibold">Permission error detected.</p>
+              <p>Please allow camera and microphone access in your browser, then retry joining.</p>
+              <p className="mt-2 text-xs text-red-200/80">If you previously dismissed the prompt, open Site Settings and enable camera/microphone access for this page.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
