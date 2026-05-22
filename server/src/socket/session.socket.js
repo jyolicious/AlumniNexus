@@ -1,3 +1,6 @@
+const mongoose = require('mongoose');
+const { LiveSession } = require('../models/index');
+
 // Real-time presence for live sessions
 // Rooms named by sessionId — no video, just presence + signaling
 
@@ -31,12 +34,25 @@ function setupSocketHandlers(io) {
       });
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       rooms.forEach((map, sessionId) => {
         for (const [userId, info] of map) {
           if (info.socketId === socket.id) {
             map.delete(userId);
             io.to(sessionId).emit('session:attendees', Array.from(map.values()));
+
+            LiveSession.findByIdAndUpdate(
+              sessionId,
+              {
+                $set: {
+                  'attendance.$[entry].leftAt': new Date(),
+                },
+              },
+              {
+                arrayFilters: [{ 'entry.user': new mongoose.Types.ObjectId(userId), 'entry.leftAt': null }],
+              }
+            ).catch(() => {});
+
             break;
           }
         }

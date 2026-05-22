@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 export default function AlumniSessions() {
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', topic: '', meetUrl: '', joinPassword: '', slots: 50, scheduledAt: '', duration: 60 })
+  const [form, setForm] = useState({ title: '', description: '', topic: '', joinPassword: '', slots: 50, scheduledAt: '', duration: 60 })
   const qc = useQueryClient()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -15,12 +15,46 @@ export default function AlumniSessions() {
     queryFn: () => api.get('/sessions/my').then(r => r.data),
   })
 
+  const sessionsSorted = sessions.slice().sort((a, b) => {
+    if (a.status === b.status) return new Date(a.scheduledAt) - new Date(b.scheduledAt)
+    if (a.status === 'LIVE') return -1
+    if (b.status === 'LIVE') return 1
+    return 0
+  })
+
+  // download attendance CSV for a session
+  const downloadAttendance = async (id, joinCode) => {
+    try {
+      const res = await api.get(`/sessions/${id}/attendance`, { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `attendance-${joinCode || id}.csv`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to download attendance')
+    }
+  }
+
+  const copySessionDetails = async (session) => {
+    const details = `Join Code: ${session.joinCode}\nPassword: ${session.joinPassword}`
+    try {
+      await navigator.clipboard.writeText(details)
+      toast.success('Session details copied to clipboard')
+    } catch (err) {
+      toast.error('Unable to copy session details')
+    }
+  }
+
   const createMutation = useMutation({
     mutationFn: () => api.post('/sessions', form),
     onSuccess: () => {
       toast.success('Session created!')
       setShowCreate(false)
-      setForm({ title: '', description: '', topic: '', meetUrl: '', joinPassword: '', slots: 50, scheduledAt: '', duration: 60 })
+      setForm({ title: '', description: '', topic: '', joinPassword: '', slots: 50, scheduledAt: '', duration: 60 })
       qc.invalidateQueries(['my-sessions'])
     },
     onError: err => toast.error(err.response?.data?.error || 'Failed to create session'),
@@ -58,7 +92,7 @@ export default function AlumniSessions() {
         </div>
       ) : (
         <div className="space-y-4">
-          {sessions.map(s => (
+          {sessionsSorted.map(s => (
             <div key={s._id} className="bg-white/3 border border-white/8 rounded-xl p-5 hover:border-white/12 transition-all">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
@@ -94,23 +128,35 @@ export default function AlumniSessions() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <a href={s.meetUrl} target="_blank" rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg border border-white/10 text-white/50 text-xs hover:border-white/25 hover:text-white/70 transition-all">
-                  Open meet link ↗
-                </a>
-                {s.status === 'UPCOMING' && (
-                  <button onClick={() => updateStatus.mutate({ id: s._id, status: 'LIVE' })}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs hover:bg-emerald-500/30 transition-all">
-                    Mark as Live
+              <div className="grid gap-2 sm:grid-cols-[auto_auto_1fr] items-center">
+                <div className="flex flex-wrap gap-2">
+                  {s.status === 'UPCOMING' && (
+                    <button onClick={() => updateStatus.mutate({ id: s._id, status: 'LIVE' })}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs hover:bg-emerald-500/30 transition-all">
+                      Mark as Live
+                    </button>
+                  )}
+                  {s.status === 'LIVE' && (
+                    <button onClick={() => updateStatus.mutate({ id: s._id, status: 'ENDED' })}
+                      className="px-3 py-1.5 rounded-lg bg-white/10 text-white/50 text-xs hover:bg-white/15 transition-all">
+                      End Session
+                    </button>
+                  )}
+                  <button onClick={() => downloadAttendance(s._id, s.joinCode)}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/40 hover:bg-white/3">
+                    Download Attendance
                   </button>
-                )}
-                {s.status === 'LIVE' && (
-                  <button onClick={() => updateStatus.mutate({ id: s._id, status: 'ENDED' })}
-                    className="px-3 py-1.5 rounded-lg bg-white/10 text-white/50 text-xs hover:bg-white/15 transition-all">
-                    End Session
+                </div>
+                <div className="sm:col-span-2 flex flex-col sm:flex-row gap-2 justify-end">
+                  <a href={`/sessions/join?code=${s.joinCode}`}
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-all">
+                    Join Session
+                  </a>
+                  <button onClick={() => copySessionDetails(s)}
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/40 hover:bg-white/3 transition-all">
+                    Copy Code & Password
                   </button>
-                )}
+                </div>
               </div>
             </div>
           ))}
@@ -130,7 +176,6 @@ export default function AlumniSessions() {
               {[
                 { k: 'title', label: 'Session Title', placeholder: 'Cracking FAANG Interviews' },
                 { k: 'topic', label: 'Topic / Domain', placeholder: 'DSA, System Design...' },
-                { k: 'meetUrl', label: 'Google Meet / Zoom URL', placeholder: 'https://meet.google.com/...' },
                 { k: 'joinPassword', label: 'Join Password', placeholder: 'Students enter this to join' },
               ].map(({ k, label, placeholder }) => (
                 <div key={k}>

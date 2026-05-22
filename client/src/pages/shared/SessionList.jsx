@@ -3,11 +3,21 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import api from '../../api/axios'
+import { useAuth } from '../../context/AuthContext'
 
 export function SessionList() {
-  const { data: sessions = [], isLoading } = useQuery({
+  const { user } = useAuth()
+  const { data: sessionsRaw = [], isLoading } = useQuery({
     queryKey: ['sessions'],
     queryFn: () => api.get('/sessions').then(r => r.data),
+  })
+
+  // Sort client-side: LIVE first, then UPCOMING by scheduledAt
+  const sessions = sessionsRaw.slice().sort((a, b) => {
+    if (a.status === b.status) return new Date(a.scheduledAt) - new Date(b.scheduledAt)
+    if (a.status === 'LIVE') return -1
+    if (b.status === 'LIVE') return 1
+    return 0
   })
 
   return (
@@ -49,7 +59,7 @@ export function SessionList() {
               <p className="text-white/40 text-xs mb-1">{s.topic}</p>
               {s.description && <p className="text-white/25 text-xs line-clamp-2 mb-3">{s.description}</p>}
 
-              <div className="mt-auto">
+              <div className="mt-auto space-y-3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white text-[10px]">
                     {s.host?.name?.charAt(0)}
@@ -59,10 +69,31 @@ export function SessionList() {
                     {new Date(s.scheduledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <Link to="/sessions/join"
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-all">
-                  ▷ Join Session
-                </Link>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/5 rounded-lg px-3 py-2">
+                    <p className="text-white/30 text-[10px] uppercase tracking-widest mb-0.5">Join Code</p>
+                    <p className="text-white font-mono font-semibold text-lg tracking-widest">{s.joinCode}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2">
+                    <p className="text-white/30 text-[10px] uppercase tracking-widest mb-0.5">Password</p>
+                    <p className="text-white font-mono font-semibold text-lg tracking-widest">{s.joinPassword}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    {user && s.host && (user._id === s.host._id || user.id === s.host._id) ? (
+                      <Link to="/alumni/sessions"
+                        className="w-full block text-center py-2 rounded-lg border border-white/10 text-white/50 text-xs hover:border-white/25 hover:text-white/70 transition-all">
+                        Manage
+                      </Link>
+                    ) : (
+                      <Link to={`/sessions/join?code=${s.joinCode}`}
+                        className="w-full block text-center py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-all">
+                        ▷ Join
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           ))}

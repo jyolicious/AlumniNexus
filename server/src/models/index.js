@@ -75,7 +75,8 @@ const liveSessionSchema = new Schema({
   title:        { type: String, required: true },
   description:  String,
   topic:        { type: String, required: true },
-  meetUrl:      { type: String, required: true },
+  meetUrl:      String,
+  roomName:     { type: String, required: true, unique: true },
   joinCode:     { type: String, required: true, unique: true },  // 6-char code
   joinPassword: { type: String, required: true },
   slots:        { type: Number, default: 50 },
@@ -83,6 +84,13 @@ const liveSessionSchema = new Schema({
   duration:     { type: Number, default: 60 }, // minutes
   status:       { type: String, enum: ['UPCOMING','LIVE','ENDED'], default: 'UPCOMING' },
   attendees:    [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  attendance: [
+    {
+      user:     { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      joinedAt: { type: Date, default: Date.now },
+      leftAt:   Date,
+    }
+  ],
 }, { timestamps: true });
 
 module.exports = {
